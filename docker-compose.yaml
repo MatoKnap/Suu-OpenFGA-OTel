@@ -1,0 +1,49 @@
+version: '3.9'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - otel-collector
+      - openfga
+      
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4318:4318"
+      - "9090:9090"
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9091:9090"
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+  openfga:
+    image: openfga/openfga:latest
+    ports:
+      - "8080:8080"
+    command: run
+  init-openfga:
+    image: curlimages/curl:latest
+    volumes:
+      - ./openfga_model.json:/openfga_model.json
+      - ./init_openfga.sh:/init_openfga.sh
+    entrypoint: ["/bin/sh", "/init_openfga.sh"]
+    depends_on:
+      - openfga

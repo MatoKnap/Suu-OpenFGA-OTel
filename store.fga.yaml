@@ -1,0 +1,42 @@
+model: |
+  model
+    schema 1.1
+
+  type user
+
+  type document
+    relations
+      define can_access: [user]
+
+tuples:
+  - user: user:alice
+    relation: can_access
+    object: document:123
+
+tests:
+  - name: Test access for document:123
+    check:
+      - user: user:alice
+        object: document:123
+        assertions:
+          can_access: true
+      - user: user:bob
+        object: document:123
+        assertions:
+          can_access: false
+  - name: Test documents alice can access
+    list_objects:
+      - user: user:alice
+        type: document
+        assertions:
+          can_access:
+            - document:123
+  - name: Test users who can access document:123
+    list_users:
+      - object: document:123
+        user_filter:
+          - type: user
+        assertions:
+          can_access:
+            users:
+              - user:alice
