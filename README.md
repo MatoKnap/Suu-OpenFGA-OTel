@@ -9,8 +9,7 @@
 
 Celem naszego projektu jest stworzenie dema, które zaprezentuje możliwości i cechy dwóch technologii: **OpenFGA** – systemu zarządzania autoryzacją opartego na modelu RBAC/ABAC, oraz **OpenTelemetry (Otel)** – standardu służącego do zbierania i eksportowania danych obserwowalności (tracing, metrics, logs).
 
-Scenariusz projektu opiera się na _..._, co pozwala na przedstawienie rzeczywistego zastosowania wybranych technologii. Projekt nie powiela żadnego istniejącego w internecie rozwiązania / Projekt stanowi istotne rozszerzenie przykładu z _..._.
-
+Scenariusz projektu opiera się na _..._, co pozwala na przedstawienie rzeczywistego zastosowania wybranych technologii. Projekt nie powiela żadnego istniejącego w internecie rozwiązania, ale bazuje na przykładach, np.: [openFGA](https://github.com/openfga/sample-stores?fbclid=IwY2xjawKR1nxleHRuA2FlbQIxMAABHsJppZ4acY8LCBK6maNSxNt9_tu7k_jWHN-gTs0tglJkXIqhbqKXk8WucG95_aem_PaWmno4MIyNxFFq1ZlbVvw).
 
 ## Podstawy teoretyczne i stos technologiczny
 
