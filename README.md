@@ -1,104 +1,72 @@
 # OpenFGA-OTel
 
+## Środowiska Udostępniania Usług: OpenFGA - OTel
 
-\documentclass{article}
+**Autorzy:** Basia Wojtarowicz, Maciej Kopeć, Mateusz Knap, Tomasz Policht  
+**Data:** Maj 2025
 
-% Language setting
-% Replace `english' with e.g. `spanish' to change the document language
-\usepackage[polish]{babel}
+## Wprowadzenie
 
-% Set page size and margins
-% Replace `letterpaper' with `a4paper' for UK/EU standard size
-\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+Celem naszego projektu jest stworzenie dema, które zaprezentuje możliwości i cechy dwóch technologii: **OpenFGA** – systemu zarządzania autoryzacją opartego na modelu RBAC/ABAC, oraz **OpenTelemetry (Otel)** – standardu służącego do zbierania i eksportowania danych obserwowalności (tracing, metrics, logs).
 
-% Useful packages
-\usepackage{amsmath}
-\usepackage{graphicx}
-\usepackage[colorlinks=true, allcolors=blue]{hyperref}
-\usepackage{hyphenat}
-\hyphenation{po-lski}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc} 
-\usepackage{listings}
-\usepackage{graphicx}
-\usepackage{subcaption}
+Scenariusz projektu opiera się na _..._, co pozwala na przedstawienie rzeczywistego zastosowania wybranych technologii. Projekt nie powiela żadnego istniejącego w internecie rozwiązania / Projekt stanowi istotne rozszerzenie przykładu z _..._.
 
 
-\title{Środowiska Udostępniania Usług: OpenFGA - OTel}
-\author{Basia Wojtarowicz, Maciej Kopeć, Mateusz Knap, Tomasz Policht}
-\date{Maj 2025}
+## Podstawy teoretyczne i stos technologiczny
 
-\begin{document}
+### OpenFGA
 
-\maketitle
+**OpenFGA (Fine-Grained Authorization)** to otwartoźródłowa implementacja systemu autoryzacji, opracowana przez firmę Auth0. OpenFGA opiera się na koncepcji zarządzania dostępem na poziomie relacyjnym i umożliwia definiowanie złożonych polityk uprawnień z dużą dokładnością (fine-grained access control), przy wsparciu modeli takich jak **RBAC** (Role-Based Access Control) oraz **ABAC** (Attribute-Based Access Control).
 
-\section{Wprowadzenie}
+**Kluczowe cechy OpenFGA:**
 
-Celem naszego projektu jest stworzenie dema, które zaprezentuje możliwości i cechy dwóch technologii: \textbf{OpenFGA} – systemu zarządzania autoryzacją opartego na modelu RBAC/ABAC, oraz \textbf{OpenTelemetry (Otel)} – standardu służącego do zbierania i eksportowania danych obserwowalności (tracing, metrics, logs).
+- Definiowanie modeli uprawnień w formie deklaratywnej,
+- Obsługa dynamicznych ról, grup i dziedziczenia uprawnień,
+- Skalowalność dzięki optymalizacjom pod kątem dużych systemów,
+- Interfejsy API umożliwiające integrację z dowolnym backendem.
 
-Scenariusz projektu opiera się na \textit{...}, co pozwala na przedstawienie rzeczywistego zastosowania wybranych technologii. Projekt nie powiela żadnego istniejącego w internecie rozwiązania / Projekt stanowi istotne rozszerzenie przykładu z \textit{...}.
+### OpenTelemetry (Otel)
 
-\section{Podstawy teoretyczne i stos technologiczny}
+**OpenTelemetry** to zestaw narzędzi, bibliotek oraz standardów służących do zapewnienia obserwowalności systemów rozproszonych. Projekt rozwijany przez **CNCF** (Cloud Native Computing Foundation) powstał z połączenia wcześniejszych inicjatyw **OpenTracing** i **OpenCensus**. OpenTelemetry udostępnia ujednolicony interfejs do zbierania trzech głównych typów danych telemetrycznych:
 
-\subsection{OpenFGA}
+- **Trace’y** – śledzenie przepływu zapytań przez wiele komponentów systemu,
+- **Metryki** – pomiary dotyczące wydajności i stanu systemu,
+- **Logi** – ustandaryzowane dzienniki zdarzeń.
 
-\textbf{OpenFGA (Fine-Grained Authorization)} to otwartoźródłowa implementacja systemu autoryzacji, opracowana przez firmę Auth0. OpenFGA opiera się na koncepcji zarządzania dostępem na poziomie relacyjnym i umożliwia definiowanie złożonych polityk uprawnień z dużą dokładnością (fine-grained access control), przy wsparciu modeli takich jak \textbf{RBAC} (Role-Based Access Control) oraz \textbf{ABAC} (Attribute-Based Access Control).
+Dzięki modularnej budowie Otel może być łatwo integrowany z aplikacjami mikroserwisowymi oraz eksportować dane do narzędzi takich jak **Jaeger**, **Prometheus**, **Grafana** czy **AWS CloudWatch**.
 
-\noindent Kluczowe cechy OpenFGA:
 
-\begin{itemize}
-    \item Definiowanie modeli uprawnień w formie deklaratywnej,
-    \item Obsługa dynamicznych ról, grup i dziedziczenia uprawnień,
-    \item Skalowalność dzięki optymalizacjom pod kątem dużych systemów,
-    \item Interfejsy API umożliwiające integrację z dowolnym backendem.
-\end{itemize}
+## Zarys demo
 
-\subsection{OpenTelemetry (Otel)}
-
-\textbf{OpenTelemetry} to zestaw narzędzi, bibliotek oraz standardów służących do zapewnienia obserwowalności systemów rozproszonych. Projekt rozwijany przez \textbf{CNCF} (Cloud Native Computing Foundation) powstał z połączenia wcześniejszych inicjatyw \textbf{OpenTracing} i \textbf{OpenCensus}. OpenTelemetry udostępnia ujednolicony interfejs do zbierania trzech głównych typów danych telemetrycznych:
-
-\begin{itemize}
-    \item \textbf{Trace’y} – śledzenie przepływu zapytań przez wiele komponentów systemu,
-    \item \textbf{Metryki} – pomiary dotyczące wydajności i stanu systemu,
-    \item \textbf{Logi} – ustandaryzowane dzienniki zdarzeń.
-\end{itemize}
-
-Dzięki modularnej budowie Otel może być łatwo integrowany z aplikacjami mikroserwisowymi oraz eksportować dane do narzędzi takich jak \textbf{Jaeger}, \textbf{Prometheus}, \textbf{Grafana} czy \textbf{AWS CloudWatch}.
-
-\section{Zarys demo}
 Pokażemy, jak aplikacja bankowa/e-commerce korzysta z OpenFGA do autoryzacji i za pomocą OpenTelemetry możemy obserwować kto i na jakiej podstawie uzyskał do niej dostęp lub nie.
 
-\subsection{Struktura}
-\begin{enumerate}
-    \item Aplikacja testowa (np. skrypt w Pythonie lub Go)
-    \begin{itemize}
-        \item Wysyła zapytania do OpenFGA (czy user:X ma dostęp do resource:Y),
-        \item W zależności od odpowiedzi: wyświetla "Access granted"/"Access denied",
-        \item Dla każdego takiego zapytania — generuje trace/span w OpenTelemetry
-    \end{itemize}
-    \item OpenFGA
-    \begin{itemize}
-        \item Uruchomiony lokalnie (np. z repo sample-stores),
-        \item Załadowany model (z kontami bankowymi),
-        \item Wysłane tuple z demo (np. "user:alice" jest customer)
-    \end{itemize}
-    \item OpenTelemetry
-    \begin{itemize}
-        \item Zainicjalizowane SDK (np. w Pythonie),
-        \item Export danych do Jaegera
-    \end{itemize}
-    \item Wizualna prezentacja efektu
-    \begin{itemize}
-        \item w Grafanie lub Prometheusie,
-        \item Prometheus zbiera dane z endpointu /metrics naszej aplikacji,
-        \item Dzięki temu, w Grafanie możemy zobaczyć: ile zapytań zostało wykonanych, jak wiele z nich zakończyło się sukcesem lub odmową,czas odpowiedzi systemu, ewentualne błędy lub przeciążenia, to i kiedy próbował uzyskać dostęp do jakiego zasobu.
-        
-    \end{itemize}
-\end{enumerate}
+### Struktura
 
-\section{Podział ról w zespole}
-\begin{itemize}
-    \item 
-\end{itemize}
+1. **Aplikacja testowa** (np. skrypt w Pythonie lub Go)
+   - Wysyła zapytania do OpenFGA (czy `user:X` ma dostęp do `resource:Y`),
+   - W zależności od odpowiedzi: wyświetla _"Access granted"_ / _"Access denied"_,
+   - Dla każdego takiego zapytania — generuje trace/span w OpenTelemetry.
 
-\end{document}
+2. **OpenFGA**
+   - Uruchomiony lokalnie (np. z repo sample-stores),
+   - Załadowany model (z kontami bankowymi),
+   - Wysłane tuple z demo (np. `"user:alice"` jest customer).
+
+3. **OpenTelemetry**
+   - Zainicjalizowane SDK (np. w Pythonie),
+   - Export danych do Jaegera.
+
+4. **Wizualna prezentacja efektu**
+   - W Grafanie lub Prometheusie,
+   - Prometheus zbiera dane z endpointu `/metrics` naszej aplikacji,
+   - Dzięki temu, w Grafanie możemy zobaczyć:
+     - ile zapytań zostało wykonanych,
+     - jak wiele z nich zakończyło się sukcesem lub odmową,
+     - czas odpowiedzi systemu,
+     - ewentualne błędy lub przeciążenia,
+     - kto i kiedy próbował uzyskać dostęp do jakiego zasobu.
+
+
+## Podział ról w zespole
+
+- *(Sekcja do uzupełnienia)*
