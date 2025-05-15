@@ -29,4 +29,9 @@ def check_access(user, resource):
                 "object": resource,
             }
         })
-        return response.json().get("allowed", False)
+        span = trace.get_current_span()
+        allowed = response.json().get("allowed", False)
+        span.set_attribute("check.allowed", allowed)
+        span.set_attribute("user", user)
+
+        return allowed

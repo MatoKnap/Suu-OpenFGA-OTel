@@ -19,6 +19,7 @@ services:
     ports:
       - "4318:4318"
       - "9090:9090"
+      - "8888:8888"
 
   prometheus:
     image: prom/prometheus
@@ -33,6 +34,10 @@ services:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana-conf/grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana-conf/provisioning:/etc/grafana/provisioning
+      - ./grafana-conf/dashboards:/etc/grafana/dashboards
 
   openfga:
     image: openfga/openfga:latest
