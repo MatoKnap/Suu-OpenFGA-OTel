@@ -44,7 +44,8 @@ Pokażemy, jak aplikacja bankowa/e-commerce korzysta z OpenFGA do autoryzacji i 
 1. **Aplikacja testowa** (np. skrypt w Pythonie lub Go)
    - Wysyła zapytania do OpenFGA (czy `user:X` ma dostęp do `resource:Y`),
    - W zależności od odpowiedzi: wyświetla _"Access granted"_ / _"Access denied"_,
-   - Dla każdego takiego zapytania — generuje trace/span w OpenTelemetry.
+   - Dla każdego takiego zapytania — generuje trace/span w OpenTelemetry,
+   - Wysyła metryki do OpenTelemetryCollector (sprawdzono czy `user:X` ma dostęp do `resource:Y` i czy odpowiedź była pozytywna/negatywna),
 
 2. **OpenFGA**
    - Uruchomiony lokalnie (np. z repo sample-stores),
@@ -68,4 +69,5 @@ Pokażemy, jak aplikacja bankowa/e-commerce korzysta z OpenFGA do autoryzacji i 
 
 ## Podział ról w zespole
 
-- *(Sekcja do uzupełnienia)*
+- Maciej Kopeć: wysyłanie, zbieranie i wyświetlanie metryk
+- ...

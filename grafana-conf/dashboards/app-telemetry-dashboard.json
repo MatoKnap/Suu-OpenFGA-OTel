@@ -6,16 +6,20 @@
   "timezone": "browser",
   "schemaVersion": 30,
   "version": 1,
-  "refresh": "10s",
+  "refresh": "5s",
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
   "panels": [
     {
       "type": "timeseries",
-      "title": "Spans Received by OTEL Collector",
+      "title": "Spans Exported per Minute",
       "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
       "targets": [
         {
-          "expr": "rate(otelcol_receiver_accepted_spans_total[1m])",
-          "legendFormat": "{{receiver}}",
+          "expr": "rate(otelcol_exporter_sent_spans_total[1m])*60",
+          "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ],
@@ -23,11 +27,11 @@
     },
     {
       "type": "timeseries",
-      "title": "HTTP Requests per Second",
+      "title": "OTEL Collector CPU Usage",
       "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
       "targets": [
         {
-          "expr": "rate(http_server_duration_seconds_count[1m])",
+          "expr": "rate(otelcol_process_cpu_seconds_total[1m])",
           "legendFormat": "{{instance}}",
           "refId": "B"
         }
@@ -36,11 +40,11 @@
     },
     {
       "type": "timeseries",
-      "title": "Access Checks per Second",
+      "title": "Access Checks per Minute",
       "gridPos": { "x": 0, "y": 6, "w": 8, "h": 6 },
       "targets": [
         {
-          "expr": "rate(otelcol_receiver_accepted_spans_total{span_name=\"check_access\"}[1m])",
+          "expr": "sum(rate(check_access_calls_total[1m])) by(instance) * 60",
           "legendFormat": "{{instance}}",
           "refId": "C"
         }
@@ -49,11 +53,11 @@
     },
         {
       "type": "timeseries",
-      "title": "Access Checks Granted per Second",
+      "title": "Access Checks Passed per Minute",
       "gridPos": { "x": 8, "y": 6, "w": 8, "h": 6 },
       "targets": [
         {
-          "expr": "rate(otelcol_receiver_accepted_spans_total{span_name=\"check_access\", check_allowed=\"true\"}[1m])",
+          "expr": "sum(rate(check_access_calls_total{allowed=\"True\"}[1m])) by(instance) * 60",
           "legendFormat": "{{instance}}",
           "refId": "D"
         }
@@ -62,11 +66,11 @@
     },
     {
       "type": "timeseries",
-      "title": "Access Checks Denied per Second",
+      "title": "Access Checks Denied per Minute",
       "gridPos": { "x": 16, "y": 6, "w": 8, "h": 6 },
       "targets": [
         {
-          "expr": "rate(otelcol_receiver_accepted_spans{span_name=\"check_access\", check_allowed=\"false\"}[1m])",
+          "expr": "sum(rate(check_access_calls_total{allowed=\"False\"}[1m])) by(instance) * 60",
           "legendFormat": "{{instance}}",
           "refId": "E"
         }

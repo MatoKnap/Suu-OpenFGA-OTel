@@ -1,7 +1,10 @@
 import requests
 from opentelemetry import trace
+from opentelemetry import metrics
 import os
 
+meter = metrics.get_meter(__name__)
+check_access_counter = meter.create_counter("check_access_calls", unit="1", description="Number of check access calls")
 tracer = trace.get_tracer(__name__)
 
 FGA_API_URL = "http://openfga:8080"
@@ -20,6 +23,8 @@ if not STORE_ID:
     except requests.exceptions.RequestException as e:
         pass
 
+
+
 def check_access(user, resource):
     with tracer.start_as_current_span("check_access"):
         response = requests.post(f"{FGA_API_URL}/stores/{STORE_ID}/check", json={
@@ -31,7 +36,11 @@ def check_access(user, resource):
         })
         span = trace.get_current_span()
         allowed = response.json().get("allowed", False)
-        span.set_attribute("check.allowed", allowed)
+        span.set_attribute("check.allowed", str(allowed))
         span.set_attribute("user", user)
+        span.set_attribute("resource", resource)
+
+
+        check_access_counter.add(1, {"allowed": str(allowed), "user": user, "resource": resource})
 
         return allowed
