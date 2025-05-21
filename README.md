@@ -149,7 +149,7 @@ graph TD
    style OTelCollector fill:#FCF3CF,stroke:#F1C40F,color:#333
    style Prometheus fill:#FADBD8,stroke:#E74C3C,color:#333
    style Grafana fill:#EBDEF0,stroke:#8E44AD,color:#333
-   style Jaeger fill:#E8DAEF,stroke:#9B59B6,color:#333
+%%   style Jaeger fill:#E8DAEF,stroke:#9B59B6,color:#333
 ```
 
 ## 6. Wymagane oprogramowanie
