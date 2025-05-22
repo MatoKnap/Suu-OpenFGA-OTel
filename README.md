@@ -119,6 +119,7 @@ Model zostanie zdefiniowany w pliku `openfga_model.json`. Przykładowe reguły:
 
 - Maciej Kopeć: wysyłanie, zbieranie i wyświetlanie metryk
 - Mateusz Knap: Graf architektury, dokumentacja
+- Tomasz Policht: Początkowy setup projektu w Dockerze, opakowanie w kinda
 - ...
 
 ## 5. Architektura rozwiązania
