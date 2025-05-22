@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openfga-init
+  namespace: otel-fga
+  labels:
+    app: openfga-init
+spec:
+  template:
+    spec:
+      containers:
+      - name: init-openfga
+        image: curlimages/curl:latest
+        command: ["/bin/sh", "/init_openfga.sh"]
+        volumeMounts:
+        - name: openfga-model
+          mountPath: /openfga_model.json
+          subPath: openfga_model.json
+        - name: init-script
+          mountPath: /init_openfga.sh
+          subPath: init_openfga.sh
+      volumes:
+      - name: openfga-model
+        configMap:
+          name: openfga-config
+      - name: init-script
+        configMap:
+          name: openfga-config
+      restartPolicy: OnFailure

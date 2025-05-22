@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: otel-fga
+resources:
+- namespace.yaml
+- app-deployment.yaml
+- app-service.yaml
+- openfga-deployment.yaml
+- openfga-service.yaml
+- otel-collector-deployment.yaml
+- otel-collector-service.yaml
+- prometheus-deployment.yaml
+- prometheus-service.yaml
+- grafana-deployment.yaml
+- grafana-service.yaml
+- openfga-init-job.yaml
+- configmaps/otel-collector-config.yaml
+- configmaps/prometheus.yml
+- configmaps/grafana-config.yaml
+- configmaps/grafana-provisioning-dashboards.yaml
+- configmaps/grafana-provisioning-datasources.yaml
+- configmaps/grafana-dashboards.yaml
+- configmaps/openfga-config.yaml
