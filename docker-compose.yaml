@@ -10,6 +10,8 @@ services:
     depends_on:
       - otel-collector
       - openfga
+    volumes:
+      - ./ids:/tmp/ids
       
   otel-collector:
     image: otel/opentelemetry-collector:latest
@@ -49,6 +51,7 @@ services:
     volumes:
       - ./openfga_model.json:/openfga_model.json
       - ./init_openfga.sh:/init_openfga.sh
+      - ./ids:/tmp/ids
     entrypoint: ["/bin/sh", "/init_openfga.sh"]
     depends_on:
       - openfga
