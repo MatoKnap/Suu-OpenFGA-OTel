@@ -11,7 +11,6 @@ services:
       - otel-collector
       - openfga
     volumes:
-      # Mount host ./ids to /tmp/ids in the container for store ID sharing
       - ./ids:/tmp/ids
       
   otel-collector:
