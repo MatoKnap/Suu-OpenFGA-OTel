@@ -26,6 +26,9 @@ if not STORE_ID:
 
 
 def check_access(user, resource):
+    # Ensure user is in the correct format
+    if not user.startswith("user:"):
+        user = f"user:{user}"
     with tracer.start_as_current_span("check_access"):
         response = requests.post(f"{FGA_API_URL}/stores/{STORE_ID}/check", json={
             "tuple_key": {
