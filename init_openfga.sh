@@ -16,6 +16,7 @@ if [ -z "$STORE_ID" ]; then
     exit 1
 fi
 echo "Store created with ID: $STORE_ID"
+mkdir -p /ids
 echo "$STORE_ID" > /ids/openfga_store_id.txt
 
 # Apply the authorization model
