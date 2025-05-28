@@ -119,7 +119,7 @@ Model zostanie zdefiniowany w pliku `openfga_model.json`. Przykładowe reguły:
 - Maciej Kopeć: wysyłanie, zbieranie i wyświetlanie metryk
 - Mateusz Knap: Graf architektury, dokumentacja
 - Tomasz Policht: Początkowy setup projektu w Dockerze, opakowanie w kinda
-- ...
+- Basia Wojtarowicz: Dodanie API do dodawania/wycofywania ról (grant permissions/revoking permissions)
 
 ## 5. Architektura rozwiązania
 ```mermaid
@@ -262,6 +262,46 @@ Po uruchomieniu systemów, można wysyłać żądania do aplikacji, aby przetest
     curl "http://localhost:8000/check?user=user:bob&resource=document:123"
     ```
     Oczekiwana odpowiedź: `{"allowed":false}`
+
+3.  **Dodaj uprawnienia (dostęp) do `document:123` dla użytkownika `user:bob`:**
+    ```bash
+    curl -X POST http://localhost:8000/permissions/grant
+      -H "Content-Type: application/json"
+      -d '{
+      "user": "user:bob",
+      "relation": "can_access",
+      "object": "document:123"
+      }'
+    ```
+    lub analogicznie w FastAPI Swagger UI wpisując w ciele zapytania POST:
+   ```{
+      "user": "user:bob",
+      "relation": "can_access",
+      "object": "document:123"
+      }
+   ```
+    Oczekiwana odpowiedź: `{"status":"success"}`
+   
+5.  **Usuń uprawnienia (dostęp) do `document:123` użytkownika `user:bob`:**
+    ```bash
+      curl -X POST http://localhost:8000/permissions/revoke
+      -H "Content-Type: application/json"
+      -d '{
+      "user": "user:bob",
+      "relation": "can_access",
+      "object": "document:123"
+      }'
+    ```
+   lub analogicznie w FastAPI Swagger UI wpisując w ciele zapytania POST:
+   ```{
+      "user": "user:bob",
+      "relation": "can_access",
+      "object": "document:123"
+      }
+   ```
+    Oczekiwana odpowiedź: `{"status":"success"}`
+    
+6. Teraz ponownie możesz sprawdzić status uprawnień zgodnie z punktem 2.
 
 ### 8.4 Prezentacja wyników
 
