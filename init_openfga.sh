@@ -16,9 +16,9 @@ if [ -z "$STORE_ID" ]; then
     exit 1
 fi
 echo "Store created with ID: $STORE_ID"
-# mkdir -p /ids -> change to "mkdir -p /tmp/ids" was needed to avoid permission issues
+
+# Write the store ID to /tmp/ids (shared with host ./ids)
 mkdir -p /tmp/ids
-# echo "$STORE_ID" > /ids/openfga_store_id.txt -> change to "/tmp/ids/openfga_store_id.txt" was needed to avoid permission issues
 echo "$STORE_ID" > /tmp/ids/openfga_store_id.txt
 
 # Apply the authorization model
