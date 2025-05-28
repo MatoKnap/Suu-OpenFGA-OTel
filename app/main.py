@@ -62,7 +62,7 @@ async def grant_permission(req: PermissionRequest):
         }
     }
     response = requests.post(url, json=data)
-    if response.status_code != 200:
+    if response.status_code not in [200, 204]:
         raise HTTPException(status_code=500, detail=f"OpenFGA error: {response.text}")
     return {"status": "success"}
 
