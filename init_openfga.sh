@@ -19,6 +19,7 @@ echo "Store created with ID: $STORE_ID"
 
 # Write the store ID to /tmp/ids (shared with host ./ids)
 mkdir -p /tmp/ids
+# Save store ID to a file
 echo "$STORE_ID" > /tmp/ids/openfga_store_id.txt
 
 # Apply the authorization model
