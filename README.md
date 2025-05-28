@@ -63,7 +63,6 @@ Pokażemy, jak aplikacja bankowa/e-commerce korzysta z OpenFGA do autoryzacji i 
 
 3. **OpenTelemetry**
    - Zainicjalizowane SDK (np. w Pythonie),
-   - Export danych do Jaegera.
 
 4. **Wizualna prezentacja efektu**
    - W Grafanie lub Prometheusie,
@@ -153,6 +152,51 @@ graph TD
 %%   style Jaeger fill:#E8DAEF,stroke:#9B59B6,color:#333
 ```
 
+### 5.1 Opis komponentów i przepływu danych
+
+1.  **Użytkownik Końcowy / Klient HTTP (`UserClient`):** Inicjuje żądanie do aplikacji, np. poprzez `curl` lub przeglądarkę, aby sprawdzić dostęp do zasobu.
+2.  **Aplikacja Python FastAPI (`App`):**
+    *   Główna aplikacja demo, napisana w Pythonie z użyciem frameworka FastAPI.
+    *   Udostępnia endpoint `/check?user=...&resource=...`.
+    *   Integruje się z SDK OpenTelemetry (`OTelSDK`) w celu generowania śladów i metryk dla każdego żądania oraz dla operacji autoryzacyjnych.
+    *   Komunikuje się z serwisem OpenFGA (`OpenFGA Service`) w celu weryfikacji uprawnień użytkownika do zasobu.
+3.  **OpenFGA Service (`OpenFGA`):**
+    *   Kontener z uruchomioną usługą OpenFGA.
+    *   Przechowuje model autoryzacji i zdefiniowane relacje (tuples).
+    *   Odpowiada na zapytania `Check` z aplikacji.
+4.  **Skrypt Inicjalizacyjny OpenFGA (`init-openfga`):**
+    *   Jednorazowy kontener uruchamiany przy starcie, który konfiguruje OpenFGA.
+    *   Tworzy "store" (magazyn danych dla modelu i tupli).
+    *   Wgrywa model autoryzacji (z `openfga_model.json`).
+    *   Zapisuje początkowe relacje (tuples) definiujące uprawnienia.
+5.  **OpenTelemetry Collector (`OTelCollector`):**
+    *   Centralny punkt zbierania danych telemetrycznych.
+    *   Odbiera ślady i metryki z aplikacji (`App`) przez protokół OTLP.
+    *   Przetwarza dane (np. grupuje w partie).
+    *   Eksportuje metryki do Prometheus w formacie oczekiwanym przez Prometheus.
+    *   Eksportuje ślady do backendu śledzenia.
+6.  **Prometheus:**
+    *   Zbiera metryki z OpenTelemetry Collector (z endpointu `/metrics` wystawionego przez exporter `prometheus` w OTel Collector).
+    *   Przechowuje metryki jako szeregi czasowe.
+7.  **Grafana:**
+    *   Narzędzie do wizualizacji.
+    *   Pobiera dane z Prometheus jako źródła danych.
+    *   Wyświetla dashboardy z metrykami dotyczącymi działania aplikacji i procesu autoryzacji.
+
+**Przepływ danych (dla żądania `/check`):**
+
+1.  Klient wysyła żądanie HTTP GET do endpointu `/check` aplikacji FastAPI, podając `user` i `resource`.
+2.  Aplikacja FastAPI odbiera żądanie. OTel SDK (automatyczna instrumentacja FastAPI i manualna dla klienta FGA) tworzy nowy ślad (span).
+3.  Aplikacja przygotowuje zapytanie `Check` do OpenFGA. OTel SDK tworzy podrzędny span dla tej operacji.
+4.  Aplikacja wysyła zapytanie `Check` do serwisu OpenFGA.
+5.  OpenFGA przetwarza zapytanie na podstawie swojego modelu i tupli, zwracając `{"allowed": true/false}`.
+6.  Aplikacja odbiera odpowiedź z OpenFGA. Span dla operacji FGA jest zamykany, wzbogacany o atrybuty (wynik, użytkownik, zasób). Metryka (`check_access_calls_total`) jest inkrementowana.
+7.  Aplikacja zwraca odpowiedź JSON do klienta. Główny span żądania jest zamykany.
+8.  OTel SDK w aplikacji wysyła zebrane ślady i metryki (w tle, w partiach) do OpenTelemetry Collector.
+9.  OTel Collector eksportuje metryki do Prometheus.
+10. Prometheus okresowo scrapuje metryki z OTel Collector.
+11. Użytkownik może przeglądać metryki w Grafanie (która odpytuje Prometheus).
+
 ## 6. Wymagane oprogramowanie
 
 Do uruchomienia projektu wymagane są następujące narzędzia:
@@ -186,3 +230,58 @@ Do uruchomienia projektu wymagane są następujące narzędzia:
    Wszystkie serwisy (app, otel-collector, prometheus, grafana, openfga) powinny mieć status `Up` lub `running`. Kontener `init-openfga` powinien mieć status `Exited (0)` po pomyślnym wykonaniu.
 
 4.  **Poczekaj chwilę** na pełne uruchomienie i ustabilizowanie się wszystkich serwisów, zwłaszcza na inicjalizację OpenFGA przez `init-openfga`.
+
+## 8. Demo
+
+### 8.1 Uruchomienie infrastruktury
+
+Zostało to opisane w punkcie 7.1 ("Jak odtworzyć"). Po wykonaniu `docker-compose up -d`, cała infrastruktura jest gotowa.
+
+### 8.2 Przygotowanie danych (inicjalizacja OpenFGA)
+
+Kontener `init-openfga` automatycznie wykonuje następujące kroki:
+1.  Tworzy "store" w OpenFGA.
+2.  Wgrywa model autoryzacji z `openfga_model.json`.
+3.  Zapisuje początkowe tuple, np. `user:alice` ma relację `can_access` do `document:123`.
+
+Możesz zmodyfikować `openfga_model.json` i listę tupli w `init_openfga.sh`, aby stworzyć bardziej złożony scenariusz zgodny z opisaną koncepcją studium przypadku (np. z użytkownikami, grupami i różnymi typami dokumentów).
+
+### 8.3 Procedura wykonania (generowanie ruchu)
+
+Po uruchomieniu systemów, można wysyłać żądania do aplikacji, aby przetestować autoryzację i obserwować generowane dane telemetryczne.
+
+1.  **Sprawdź dostęp dla `alice` do `document:123` (powinno być dozwolone):**
+    Otwórz w przeglądarce lub użyj `curl`:
+    ```bash
+    curl "http://localhost:8000/check?user=user:alice&resource=document:123"
+    ```
+    Oczekiwana odpowiedź: `{"allowed":true}`
+
+2.  **Sprawdź dostęp dla `bob` do `document:123` (powinno być zabronione):**
+    ```bash
+    curl "http://localhost:8000/check?user=user:bob&resource=document:123"
+    ```
+    Oczekiwana odpowiedź: `{"allowed":false}`
+
+### 8.4 Prezentacja wyników
+
+1.  **Grafana (Metryki):**
+    *   Otwórz Grafanę w przeglądarce: `http://localhost:3000`
+    *   Zaloguj się (domyślnie: użytkownik `admin`, hasło `admin` - zdefiniowane w `docker-compose.yaml`).
+    *   Przejdź do zakładki "Dashboards" (lub "Przeglądaj pulpity").
+    *   Odszukaj i otwórz zaimportowany dashboard "App + OTEL Telemetry" (lub podobnie nazwany, z folderu "App").
+    *   Obserwuj panele pokazujące:
+        *   Liczbę wyeksportowanych spanów.
+        *   Użycie CPU przez OTel Collector.
+        *   Całkowitą liczbę zapytań o autoryzację (`check_access_calls_total`).
+        *   Liczbę zapytań zakończonych sukcesem (`allowed="True"`).
+        *   Liczbę zapytań zakończonych odmową (`allowed="False"`).
+        *   Status "Up" dla monitorowanych serwisów.
+        *   Możesz dostosować zakres czasu, aby zobaczyć dane z ostatniej aktywności.
+
+2.  **Logi OpenTelemetry Collector:**
+    Aby zobaczyć ślady eksportowane do `debug`:
+    ```bash
+    docker-compose logs otel-collector
+    ```
+    W logach powinny pojawić się szczegółowe informacje o każdym spanie. Będzie to mniej czytelne niż w Jaegerze, ale pokaże, że ślady są generowane.
