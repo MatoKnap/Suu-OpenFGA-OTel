@@ -190,12 +190,25 @@ graph TD
 3.  Aplikacja przygotowuje zapytanie `Check` do OpenFGA. OTel SDK tworzy podrzędny span dla tej operacji.
 4.  Aplikacja wysyła zapytanie `Check` do serwisu OpenFGA.
 5.  OpenFGA przetwarza zapytanie na podstawie swojego modelu i tupli, zwracając `{"allowed": true/false}`.
-6.  Aplikacja odbiera odpowiedź z OpenFGA. Span dla operacji FGA jest zamykany, wzbogacany o atrybuty (wynik, użytkownik, zasób). Metryka (`check_access_calls_total`) jest inkrementowana.
+6.  Aplikacja odbiera odpowiedź z OpenFGA. Span dla operacji FGA jest zamykany, wzbogacany o atrybuty (wynik, użytkownik, zasób). Metryka (`check_access_calls_total`) zbogacona o atrybuty (`user` i `resource`) jest inkrementowana.
 7.  Aplikacja zwraca odpowiedź JSON do klienta. Główny span żądania jest zamykany.
 8.  OTel SDK w aplikacji wysyła zebrane ślady i metryki (w tle, w partiach) do OpenTelemetry Collector.
 9.  OTel Collector eksportuje metryki do Prometheus.
 10. Prometheus okresowo scrapuje metryki z OTel Collector.
 11. Użytkownik może przeglądać metryki w Grafanie (która odpytuje Prometheus).
+
+**Przepływ danych (dla żądania `/permissions/revoke` i `/permissions/grant`):**
+
+1.  Klient wysyła żądanie HTTP POST do endpointu `/permissions/revoke` / `/permissions/grant` aplikacji FastAPI, podając `user`, `resource`, `relation` (w naszym przypadku `can_access`).
+2.  Aplikacja FastAPI odbiera żądanie. OTel SDK (automatyczna instrumentacja FastAPI i manualna dla klienta FGA) tworzy nowy ślad (span).
+3.  Aplikacja przygotowuje zapytanie `Check` do OpenFGA. OTel SDK tworzy podrzędny span dla tej operacji.
+4.  Aplikacja wysyła zapytanie `Write` do serwisu OpenFGA.
+5.  OpenFGA dodaje do modelu odpowiedni wpis i zwraca status.
+6.  Metryka (`can_access`) wzbogacona o atrybuty (`document` i `user`) jest inkrementowana lub dekrementowana w zależności od operacji (grant/revoke).
+7.  OTel SDK w aplikacji wysyła zebrane ślady i metryki (w tle, w partiach) do OpenTelemetry Collector.
+8.  OTel Collector eksportuje metryki do Prometheus.
+9. Prometheus okresowo scrapuje metryki z OTel Collector.
+10. Użytkownik może przeglądać metryki w Grafanie (która odpytuje Prometheus).
 
 ## 6. Wymagane oprogramowanie
 
