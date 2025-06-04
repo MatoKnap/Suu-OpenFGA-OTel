@@ -274,7 +274,8 @@ Po uruchomieniu systemów, można wysyłać żądania do aplikacji, aby przetest
       }'
     ```
     lub analogicznie w FastAPI Swagger UI wpisując w ciele zapytania POST:
-   ```{
+   ```json
+     {
       "user": "user:bob",
       "relation": "can_access",
       "object": "document:123"
@@ -293,7 +294,8 @@ Po uruchomieniu systemów, można wysyłać żądania do aplikacji, aby przetest
       }'
     ```
    lub analogicznie w FastAPI Swagger UI wpisując w ciele zapytania POST:
-   ```{
+   ```json
+      {
       "user": "user:bob",
       "relation": "can_access",
       "object": "document:123"
@@ -325,3 +327,27 @@ Po uruchomieniu systemów, można wysyłać żądania do aplikacji, aby przetest
     docker-compose logs otel-collector
     ```
     W logach powinny pojawić się szczegółowe informacje o każdym spanie. Będzie to mniej czytelne niż w Jaegerze, ale pokaże, że ślady są generowane.
+
+## 9. Prezentacja działania dema
+
+### 9.1. Żądania Fast API
+- Sprawdzenie czy użytkownik `user:bob` ma dostęp do `document:123`
+![FastAPI Check Request - Refuse](resources/imgs/API_request_refuse.png)
+- Nadanie uprawnień użytkownikowi `user:bob` do `document:123`
+![FastAPI Grant Permissions](resources/imgs/API_grant_access.png)
+- Ponowne sprawdzenie czy użytkownik `user:bob` ma dostęp do `document:123`
+![FastAPI Check Request - Allow](resources/imgs/API_request_accept.png)
+- Usunięcie uprawnień użytkownikowi `user:alice` do `document:123`
+![FastAPI Revoke Permissions](resources/imgs/API_revoke_access.png)
+
+### 9.2. Metryki prezentowane w Grafanie:
+- Sprawdzono dostęp dla `user:bob` / `user:alice` do dokumentu `document:123` przed nadaniem uprawnień.
+- Użytkownikowi `user:bob` nadano uprawnnienia, a użytkownikowi `user:alice` zabrano.
+- Ponownie sprawdzono dostęp dla `user:bob` / `user:alice` do dokumentu `document:123` po nadaniu uprawnień.
+![Grafana Dashboard](resources/imgs/GrafanaDashboard.png)
+
+## 10. Bibliografia
+-   [OpenFGA Documentation](https://openfga.dev/docs/)
+-   [OpenTelemetry Documentation](https://opentelemetry.io/docs/)
+-   [Python Opentelemetry Documentation](https://opentelemetry-python.readthedocs.io/)
+-   [FastAPI Documentation](https://fastapi.tiangolo.com/)

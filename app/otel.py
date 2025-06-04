@@ -23,7 +23,7 @@ def init_telemetry(service_name):
     
     # Set up the OTLP exporter for metrics
     metrics_exporter = OTLPMetricExporter(endpoint="http://otel-collector:4318/v1/metrics")
-    metric_reader = PeriodicExportingMetricReader(metrics_exporter, export_interval_millis=1000)
+    metric_reader = PeriodicExportingMetricReader(metrics_exporter, export_interval_millis=100)
     m_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
     metrics.set_meter_provider(m_provider)
 

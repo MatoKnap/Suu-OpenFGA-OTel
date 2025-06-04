@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from app.fga_client import check_access
 from app.otel import init_telemetry
 import os
 import requests
@@ -12,6 +11,7 @@ app = FastAPI()
 
 init_telemetry(service_name="openfga-python-client")
 
+from app.fga_client import check_access, can_access
 
 def get_store_id():
     try:
@@ -64,6 +64,8 @@ async def grant_permission(req: PermissionRequest):
     response = requests.post(url, json=data)
     if response.status_code != 200:
         raise HTTPException(status_code=500, detail=f"OpenFGA error: {response.text}")
+        # Increment the counter for Bob's access
+    can_access.add(1, {"user": req.user, "relation": req.relation, "object": req.object})
     return {"status": "success"}
 
 
@@ -87,4 +89,5 @@ async def revoke_permission(req: PermissionRequest):
     response = requests.post(url, json=data)
     if response.status_code != 200:
         raise HTTPException(status_code=500, detail=f"OpenFGA error: {response.text}")
+    can_access.add(-1, {"user": req.user, "relation": req.relation, "object": req.object})
     return {"status": "success"}

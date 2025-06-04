@@ -8,14 +8,14 @@
   "version": 1,
   "refresh": "5s",
   "time": {
-    "from": "now-5m",
+    "from": "now-2m",
     "to": "now"
   },
   "panels": [
     {
       "type": "timeseries",
       "title": "Spans Exported per Minute",
-      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 6 },
       "targets": [
         {
           "expr": "rate(otelcol_exporter_sent_spans_total[1m])*60",
@@ -28,12 +28,25 @@
     {
       "type": "timeseries",
       "title": "OTEL Collector CPU Usage",
-      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 6 },
       "targets": [
         {
           "expr": "rate(otelcol_process_cpu_seconds_total[1m])",
           "legendFormat": "{{instance}}",
           "refId": "B"
+        }
+      ],
+      "datasource": "Prometheus"
+    },
+    {
+      "type": "timeseries",
+      "title": "Can Access document:123",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "expr": "can_access{relation=\"can_access\", object=\"document:123\"}",
+          "legendFormat": "{{user}}",
+          "refId": "C"
         }
       ],
       "datasource": "Prometheus"
@@ -46,20 +59,21 @@
         {
           "expr": "sum(rate(check_access_calls_total[1m])) by(instance) * 60",
           "legendFormat": "{{instance}}",
-          "refId": "C"
+          "refId": "D"
         }
       ],
       "datasource": "Prometheus"
     },
+    
         {
       "type": "timeseries",
       "title": "Access Checks Passed per Minute",
       "gridPos": { "x": 8, "y": 6, "w": 8, "h": 6 },
       "targets": [
         {
-          "expr": "sum(rate(check_access_calls_total{allowed=\"True\"}[1m])) by(instance) * 60",
-          "legendFormat": "{{instance}}",
-          "refId": "D"
+          "expr": "sum(rate(check_access_calls_total{allowed=\"True\"}[1m])) by(user) * 60",
+          "legendFormat": "{{user}}",
+          "refId": "E"
         }
       ],
       "datasource": "Prometheus"
@@ -70,9 +84,9 @@
       "gridPos": { "x": 16, "y": 6, "w": 8, "h": 6 },
       "targets": [
         {
-          "expr": "sum(rate(check_access_calls_total{allowed=\"False\"}[1m])) by(instance) * 60",
-          "legendFormat": "{{instance}}",
-          "refId": "E"
+          "expr": "sum(rate(check_access_calls_total{allowed=\"False\"}[1m])) by(user) * 60",
+          "legendFormat": "{{user}}",
+          "refId": "F"
         }
       ],
       "datasource": "Prometheus"
@@ -85,7 +99,7 @@
         {
           "expr": "up",
           "legendFormat": "{{instance}}",
-          "refId": "F"
+          "refId": "G"
         }
       ],
       "datasource": "Prometheus"

@@ -5,6 +5,14 @@ import os
 
 meter = metrics.get_meter(__name__)
 check_access_counter = meter.create_counter("check_access_calls", unit="1", description="Number of check access calls")
+
+can_access = meter.create_up_down_counter(
+    "can_access",
+    description="Tracks if user can access a resource"
+)
+can_access.add(1, {"user": "user:alice", "relation":"can_access", "object": "document:123"})
+can_access.add(0, {"user": "user:bob", "relation":"can_access", "object": "document:123"})
+
 tracer = trace.get_tracer(__name__)
 
 FGA_API_URL = "http://openfga:8080"
