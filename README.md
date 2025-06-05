@@ -364,3 +364,5 @@ Po uruchomieniu systemów, można wysyłać żądania do aplikacji, aby przetest
 -   [OpenTelemetry Documentation](https://opentelemetry.io/docs/)
 -   [Python Opentelemetry Documentation](https://opentelemetry-python.readthedocs.io/)
 -   [FastAPI Documentation](https://fastapi.tiangolo.com/)
+-   [Docker Documentation](https://docs.docker.com/)
+-   [Kind Documentation](https://kind.sigs.k8s.io/)
