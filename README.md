@@ -354,9 +354,9 @@ Po uruchomieniu systemów, można wysyłać żądania do aplikacji, aby przetest
 ![FastAPI Revoke Permissions](resources/imgs/API_revoke_access.png)
 
 ### 9.2. Metryki prezentowane w Grafanie:
-- Sprawdzono dostęp dla `user:bob` / `user:alice` do dokumentu `document:123` przed nadaniem uprawnień.
+- Sprawdzono dostęp dla `user:bob` / `user:alice` do dokumentu `document:123` przed zmianą uprawnień.
 - Użytkownikowi `user:bob` nadano uprawnnienia, a użytkownikowi `user:alice` zabrano.
-- Ponownie sprawdzono dostęp dla `user:bob` / `user:alice` do dokumentu `document:123` po nadaniu uprawnień.
+- Ponownie sprawdzono dostęp dla `user:bob` / `user:alice` do dokumentu `document:123` po zmianie uprawnień.
 ![Grafana Dashboard](resources/imgs/GrafanaDashboard.png)
 
 ## 10. Bibliografia
