@@ -9,6 +9,10 @@ exporters:
     endpoint: "0.0.0.0:9090"
   debug:
     verbosity: detailed
+  otlphttp:
+    endpoint: "http://jaeger:4318"
+    tls:
+      insecure: true
 
 processors:
   batch:
@@ -26,7 +30,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug]
+      exporters: [debug, otlphttp]
     metrics:
       receivers: [otlp]
       processors: [batch]
