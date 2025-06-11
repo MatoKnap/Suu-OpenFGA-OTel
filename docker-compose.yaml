@@ -52,6 +52,9 @@ services:
       - ./grafana-conf/grafana.ini:/etc/grafana/grafana.ini
       - ./grafana-conf/provisioning:/etc/grafana/provisioning
       - ./grafana-conf/dashboards:/etc/grafana/dashboards
+    depends_on:
+      - prometheus
+      - jaeger
 
   openfga:
     image: openfga/openfga:latest

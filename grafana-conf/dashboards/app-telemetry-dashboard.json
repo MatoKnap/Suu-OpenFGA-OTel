@@ -2,7 +2,7 @@
   "id": null,
   "uid": "otel-app-telemetry",
   "title": "App + OTEL Telemetry",
-  "tags": ["otel", "fastapi", "prometheus"],
+  "tags": ["otel", "fastapi", "prometheus", "jaeger"],
   "timezone": "browser",
   "schemaVersion": 30,
   "version": 1,
@@ -64,8 +64,7 @@
       ],
       "datasource": "Prometheus"
     },
-    
-        {
+    {
       "type": "timeseries",
       "title": "Access Checks Passed per Minute",
       "gridPos": { "x": 8, "y": 6, "w": 8, "h": 6 },
@@ -103,6 +102,27 @@
         }
       ],
       "datasource": "Prometheus"
+    },
+    {
+      "id": 10,
+      "title": "Recent Traces",
+      "type": "table",
+      "datasource": {
+        "type": "jaeger",
+        "uid": "Jaeger"
+      },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 18 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "jaeger",
+            "uid": "Jaeger"
+          },
+          "queryType": "search",
+          "refId": "A",
+          "service": "openfga-python-client"
+        }
+      ]
     }
   ]
 }

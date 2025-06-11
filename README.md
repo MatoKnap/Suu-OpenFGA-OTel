@@ -131,25 +131,24 @@ graph TD
    OpenFGA -->|"5 Odpowiedź autoryzacyjna"| App;
    App -->|"6 Odpowiedź dla klienta"| UserClient;
 
-   OTelCollector -->|"7 Scrapowanie metryk (Prometheus format)"| Prometheus[Prometheus];
-   Prometheus -->|"8 Wizualizacja (Źródło danych)"| Grafana[Grafana];
+   OTelCollector -->|"7a Eksport śladów (OTLP)"| Jaeger[Jaeger];
+   OTelCollector -->|"7b Eksport metryk (Prometheus format)"| Prometheus[Prometheus];
+   
+   Prometheus -->|"8a Wizualizacja (Źródło danych)"| Grafana[Grafana];
+   Jaeger -->|"8b Zapytanie o ślady"| Grafana;
+   
    Grafana -->|"9 Dashboard"| UserClient;
 
    subgraph "Inicjalizacja OpenFGA"
       InitOpenFGA[init-openfga Script] --"Tworzy Store, Model, Tuples"--> OpenFGA;
    end
 
-%%   subgraph "Backendy Obserwowalności (opcjonalnie Jaeger)"
-%%      OTelCollector -->|"3a (Opcjonalnie) Eksport śladów (Ślady OTLP)"| Jaeger[Jaeger];
-%%      Jaeger --"Wizualizacja śladów"--> UserClient;
-%%   end
-
    style App fill:#D6EAF8,stroke:#3498DB,color:#333
    style OpenFGA fill:#D1F2EB,stroke:#1ABC9C,color:#333
    style OTelCollector fill:#FCF3CF,stroke:#F1C40F,color:#333
    style Prometheus fill:#FADBD8,stroke:#E74C3C,color:#333
    style Grafana fill:#EBDEF0,stroke:#8E44AD,color:#333
-%%   style Jaeger fill:#E8DAEF,stroke:#9B59B6,color:#333
+   style Jaeger fill:#E8DAEF,stroke:#9B59B6,color:#333
 ```
 
 ### 5.1 Opis komponentów i przepływu danych
@@ -178,10 +177,14 @@ graph TD
 6.  **Prometheus:**
     *   Zbiera metryki z OpenTelemetry Collector (z endpointu `/metrics` wystawionego przez exporter `prometheus` w OTel Collector).
     *   Przechowuje metryki jako szeregi czasowe.
-7.  **Grafana:**
+7.  **Jaeger:**
+    *   Odbiera ślady (traces) z OpenTelemetry Collector.
+    *   Umożliwia wizualizację i analizę rozproszonych śladów.
+    *   Służy jako źródło danych dla Grafany do wyświetlania śladów.
+8.  **Grafana:**
     *   Narzędzie do wizualizacji.
-    *   Pobiera dane z Prometheus jako źródła danych.
-    *   Wyświetla dashboardy z metrykami dotyczącymi działania aplikacji i procesu autoryzacji.
+    *   Pobiera dane z Prometheus (metryki) i Jaeger (ślady) jako źródła danych.
+    *   Wyświetla zintegrowane dashboardy z metrykami i śladami dotyczącymi działania aplikacji i procesu autoryzacji.
 
 **Przepływ danych (dla żądania `/check`):**
 
@@ -193,9 +196,9 @@ graph TD
 6.  Aplikacja odbiera odpowiedź z OpenFGA. Span dla operacji FGA jest zamykany, wzbogacany o atrybuty (wynik, użytkownik, zasób). Metryka (`check_access_calls_total`) zbogacona o atrybuty (`user` i `resource`) jest inkrementowana.
 7.  Aplikacja zwraca odpowiedź JSON do klienta. Główny span żądania jest zamykany.
 8.  OTel SDK w aplikacji wysyła zebrane ślady i metryki (w tle, w partiach) do OpenTelemetry Collector.
-9.  OTel Collector eksportuje metryki do Prometheus.
+9.  OTel Collector eksportuje metryki do Prometheus i ślady do Jaegera.
 10. Prometheus okresowo scrapuje metryki z OTel Collector.
-11. Użytkownik może przeglądać metryki w Grafanie (która odpytuje Prometheus).
+11. Użytkownik może przeglądać metryki i ślady w Grafanie (która odpytuje Prometheus i Jaegera).
 
 **Przepływ danych (dla żądania `/permissions/revoke` i `/permissions/grant`):**
 
@@ -358,6 +361,7 @@ Po uruchomieniu systemów, można wysyłać żądania do aplikacji, aby przetest
 - Użytkownikowi `user:bob` nadano uprawnnienia, a użytkownikowi `user:alice` zabrano.
 - Ponownie sprawdzono dostęp dla `user:bob` / `user:alice` do dokumentu `document:123` po zmianie uprawnień.
 ![Grafana Dashboard](resources/imgs/GrafanaDashboard.png)
+![Grafana Dashboard Traces](resources/imgs/GrafanaTraces.png)
 
 ## 10. Bibliografia
 -   [OpenFGA Documentation](https://openfga.dev/docs/)
