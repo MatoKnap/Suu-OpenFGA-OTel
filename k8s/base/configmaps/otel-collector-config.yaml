@@ -10,13 +10,20 @@ data:
         protocols:
           http:
             endpoint: "0.0.0.0:4318"
+
     exporters:
       prometheus:
         endpoint: "0.0.0.0:9090"
       debug:
         verbosity: detailed
+      otlphttp:
+        endpoint: "http://jaeger:4318"
+        tls:
+          insecure: true
+
     processors:
       batch:
+
     service:
       telemetry:
         metrics:
@@ -30,7 +37,7 @@ data:
         traces:
           receivers: [otlp]
           processors: [batch]
-          exporters: [debug]
+          exporters: [debug, otlphttp]
         metrics:
           receivers: [otlp]
           processors: [batch]

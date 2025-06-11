@@ -42,6 +42,7 @@ kubectl wait --for=condition=available --timeout=300s deployment/otel-collector 
 kubectl wait --for=condition=available --timeout=300s deployment/app -n otel-fga
 kubectl wait --for=condition=available --timeout=300s deployment/prometheus -n otel-fga
 kubectl wait --for=condition=available --timeout=300s deployment/grafana -n otel-fga
+kubectl wait --for=condition=available --timeout=300s deployment/jaeger -n otel-fga
 
 echo "Cluster setup complete!"
 echo "Access the app at http://localhost:8000/check?user=user:alice&resource=document:123"

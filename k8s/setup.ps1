@@ -47,9 +47,11 @@ kubectl wait --for=condition=available --timeout=300s deployment/otel-collector 
 kubectl wait --for=condition=available --timeout=300s deployment/app -n otel-fga
 kubectl wait --for=condition=available --timeout=300s deployment/prometheus -n otel-fga
 kubectl wait --for=condition=available --timeout=300s deployment/grafana -n otel-fga
+kubectl wait --for=condition=available --timeout=300s deployment/jaeger -n otel-fga
 
 Write-Host "Cluster setup complete!"
 Write-Host "Access the app at http://localhost:8000/check?user=user:alice&resource=document:123"
 Write-Host "Access Grafana at http://localhost:3000 (admin/admin)"
 Write-Host "Access OpenFGA at http://localhost:8080"
 Write-Host "Access Prometheus at http://localhost:9091"
+Write-Host "Access Jaeger at http://localhost:16686"

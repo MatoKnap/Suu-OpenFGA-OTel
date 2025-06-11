@@ -13,6 +13,9 @@ resources:
 - prometheus-service.yaml
 - grafana-deployment.yaml
 - grafana-service.yaml
+- jaeger-deployment.yaml
+- jaeger-service.yaml
+- jaeger-ui.yaml
 - openfga-init-job.yaml
 - configmaps/otel-collector-config.yaml
 - configmaps/prometheus.yml
