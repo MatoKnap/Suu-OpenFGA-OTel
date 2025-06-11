@@ -117,7 +117,7 @@ Model zostanie zdefiniowany w pliku `openfga_model.json`. Przykładowe reguły:
 ## 4. Podział ról w zespole
 
 - Maciej Kopeć: wysyłanie, zbieranie i wyświetlanie metryk
-- Mateusz Knap: Graf architektury, dokumentacja
+- Mateusz Knap: Graf architektury, dokumentacja, wyświetlanie śladów
 - Tomasz Policht: Początkowy setup projektu w Dockerze, opakowanie w kinda
 - Basia Wojtarowicz: Dodanie API do dodawania/wycofywania ról (grant permissions/revoking permissions)
 
