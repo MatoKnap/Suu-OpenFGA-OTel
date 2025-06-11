@@ -363,7 +363,191 @@ Po uruchomieniu systemów, można wysyłać żądania do aplikacji, aby przetest
 ![Grafana Dashboard](resources/imgs/GrafanaDashboard.png)
 ![Grafana Dashboard Traces](resources/imgs/GrafanaTraces.png)
 
-## 10. Bibliografia
+## 10. Szczegóły Implementacji Technicznej
+
+Poniżej znajduje się szczegółowe omówienie kluczowych elementów konfiguracji i implementacji, które stoją za działaniem dema.
+
+### 10.1. Konfiguracja Kolektora OpenTelemetry
+
+Kolektor OpenTelemetry (`otel-collector`) pełni w naszej architekturze rolę centralnego agenta do zbierania, przetwarzania i eksportowania danych telemetrycznych. Jego działanie jest w pełni zdefiniowane w plikach `docker-compose.yaml` oraz `otel-collector-config.yaml`.
+
+#### Definicja w Docker Compose
+
+W pliku `docker-compose.yaml` serwis `otel-collector` jest zdefiniowany następująco:
+
+```yaml
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4318:4318"  # Odbiornik OTLP/HTTP
+      - "9090:9090"  # Exporter dla Prometheus (metryki aplikacji)
+      - "8888:8888"  # Metryki wewnętrzne kolektora
+    depends_on:
+      - jaeger
+    restart: on-failure
+```
+
+-   **`image`**: Używamy oficjalnego obrazu OpenTelemetry Collector.
+-   **`command`**: Wskazujemy na plik konfiguracyjny, który został zamontowany w kontenerze.
+-   **`volumes`**: Montujemy lokalny plik `otel-collector-config.yaml` do wnętrza kontenera, co pozwala na łatwą modyfikację konfiguracji bez potrzeby przebudowywania obrazu.
+
+#### Konfiguracja potoków w `otel-collector-config.yaml`
+
+Konfiguracja kolektora opiera się na trzech głównych sekcjach: `receivers`, `exporters` i `pipelines`.
+
+1.  **Receivers (Odbiorniki):** Definiują, jak kolektor przyjmuje dane. W naszym projekcie używamy odbiornika **`otlp`** skonfigurowanego do przyjmowania danych w protokole OpenTelemetry Protocol przez HTTP na porcie `4318`.
+
+    ```yaml
+    receivers:
+      otlp:
+        protocols:
+          http:
+            endpoint: "0.0.0.0:4318"
+    ```
+
+2.  **Exporters (Eksportery):** Określają, dokąd kolektor ma wysyłać przetworzone dane. Zdefiniowaliśmy trzy eksportery:
+
+    ```yaml
+    exporters:
+      prometheus:
+        endpoint: "0.0.0.0:9090"
+      debug:
+        verbosity: detailed
+      otlphttp:
+        endpoint: "http://jaeger:4318"
+        tls:
+          insecure: true
+    ```
+    - **`prometheus`**: Udostępnia metryki w formacie, który może być pobierany przez serwer Prometheus.
+    - **`debug`**: Wypisuje wszystkie otrzymane dane telemetryczne na standardowe wyjście, co jest przydatne do celów deweloperskich.
+    - **`otlphttp`**: Wysyła ślady (traces) do serwisu **Jaeger** za pomocą protokołu OTLP/HTTP.
+
+3.  **Service (Pipelines):** Łączą odbiorniki, procesory (używamy `batch` do grupowania danych) i eksportery w potoki przetwarzania.
+
+    ```yaml
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug, otlphttp]
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [prometheus]
+    ```
+    -   **Potok `traces`**: Odbiera ślady, grupuje je, a następnie wysyła do `debug` i do `Jaeger`.
+    -   **Potok `metrics`**: Odbiera metryki, grupuje je, a następnie eksportuje do `prometheus`.
+
+
+### 10.2. Instrumentacja Aplikacji
+
+Instrumentacja to proces dodawania kodu do aplikacji w celu generowania danych telemetrycznych. W naszym projekcie połączyliśmy instrumentację automatyczną z manualną.
+
+#### Instrumentacja Automatyczna
+
+W pliku `app/otel.py` inicjujemy automatyczną instrumentację dla biblioteki `requests`:
+
+```python
+# app/otel.py
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+
+# ... wewnątrz funkcji init_telemetry ...
+RequestsInstrumentor().instrument()
+```
+
+Dzięki tej jednej linii, każda operacja HTTP wykonana za pomocą biblioteki `requests` (np. zapytania do OpenFGA) automatycznie generuje span w ramach istniejącego śladu, śledząc czas trwania i status zapytania.
+
+#### Instrumentacja Manualna
+
+Manualna instrumentacja daje pełną kontrolę nad tworzonymi danymi. Wykorzystaliśmy ją do stworzenia kluczowych, biznesowych metryk i śladów.
+
+**Tworzenie Śladów (Traces) w `app/fga_client.py`:**
+
+```python
+# app/fga_client.py
+from opentelemetry import trace
+
+tracer = trace.get_tracer(__name__)
+
+def check_access(user, resource):
+    with tracer.start_as_current_span("check_access") as span:
+        # ... logika zapytania do OpenFGA ...
+        allowed = response.json().get("allowed", False)
+        span.set_attribute("check.allowed", str(allowed))
+        span.set_attribute("user", user)
+        span.set_attribute("resource", resource)
+        # ...
+        return allowed
+```
+-   Tworzymy dedykowany span o nazwie `check_access` dla operacji sprawdzania uprawnień.
+-   Do spana dodajemy niestandardowe **atrybuty** (`check.allowed`, `user`, `resource`), które wzbogacają ślad o kontekst biznesowy, umożliwiając łatwe filtrowanie w Jaegerze.
+
+**Tworzenie Metryk (Metrics) w `app/fga_client.py` i `main.py`:**
+
+Używamy dwóch rodzajów metryk: **Counter** (`check_access_calls_total`) do zliczania wywołań oraz **UpDownCounter** (`can_access`) do śledzenia stanu uprawnień w czasie rzeczywistym.
+
+```python
+# app/fga_client.py
+check_access_counter = meter.create_counter("check_access_calls", ...)
+# ... wewnątrz check_access ...
+check_access_counter.add(1, {"allowed": str(allowed), "user": user, ...})
+
+# app/main.py - w endpoint'cie grant_permission
+can_access.add(1, {"user": req.user, ...})
+
+# app/main.py - w endpoint'cie revoke_permission
+can_access.add(-1, {"user": req.user, ...})
+```
+-   **Counter** jest inkrementowany o `1` przy każdym sprawdzeniu dostępu, z etykietami umożliwiającymi agregację danych w Grafanie.
+-   **UpDownCounter** jest zwiększany o `1` przy nadaniu uprawnienia i zmniejszany o `1` przy jego odebraniu, co pozwala monitorować aktualny stan polityk bezpieczeństwa.
+
+### 10.3. Konfigurowanie OpenTelemetry SDK
+
+Konfiguracja SDK OTel w aplikacji Python odbywa się w pliku `app/otel.py`, w funkcji `init_telemetry`.
+
+```python
+# app/otel.py
+def init_telemetry(service_name):
+    # 1. Definicja zasobu - identyfikacja serwisu
+    resource = Resource.create(attributes={"service.name": service_name})
+
+    # 2. Konfiguracja potoku dla śladów (Traces)
+    provider = TracerProvider(resource=resource)
+    trace.set_tracer_provider(provider)
+    exporter = OTLPSpanExporter(endpoint="http://otel-collector:4318/v1/traces")
+    trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(exporter))
+    
+    # 3. Konfiguracja potoku dla metryk (Metrics)
+    metrics_exporter = OTLPMetricExporter(endpoint="http://otel-collector:4318/v1/metrics")
+    metric_reader = PeriodicExportingMetricReader(metrics_exporter, ...)
+    m_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
+    metrics.set_meter_provider(m_provider)
+
+    # 4. Uruchomienie automatycznej instrumentacji
+    RequestsInstrumentor().instrument()
+```
+
+Kluczowe kroki to:
+1.  **`Resource`**: Każda dana telemetryczna jest tagowana atrybutem `service.name`.
+2.  **Konfiguracja Traces**: `TracerProvider` jest konfigurowany z `OTLPSpanExporter`, który wysyła spany do kolektora.
+3.  **Konfiguracja Metrics**: `MeterProvider` jest konfigurowany z `OTLPMetricExporter`, który wysyła metryki do tego samego kolektora.
+4.  **Inicjalizacja Instrumentacji**: Na końcu wywoływana jest automatyczna instrumentacja.
+
+## 11. Wnioski
+
+Analiza projektu i jego implementacji pozwala wyciągnąć następujące wnioski:
+
+1.  **Pełna Obserwowalność Procesu Autoryzacji**: Połączenie OpenFGA i OpenTelemetry zapewnia kompletny wgląd w działanie systemu autoryzacji. **Traces** (ślady) pozwalają na szczegółową analizę pojedynczego żądania o dostęp (kto pytał, o co, jaki był wynik, ile to trwało), co jest nieocenione przy debugowaniu problemów z uprawnieniami.
+2.  **Monitoring Biznesowy i Bezpieczeństwa**: **Metrics** (metryki) takie jak `check_access_calls_total` i `can_access` przenoszą monitoring z warstwy czysto technicznej (użycie CPU, pamięć) na warstwę biznesową. Możemy tworzyć alerty na podstawie anomalii (np. nagły wzrost odmów dostępu) i wizualizować w czasie rzeczywistym, kto ma dostęp do kluczowych zasobów.
+3.  **Modułowość i Centralizacja**: Architektura oparta na Kolektorze OTel jest wysoce skalowalna i elastyczna. Aplikacja nie musi wiedzieć, gdzie docelowo trafią jej dane (Jaeger, Prometheus) – wysyła je do jednego miejsca (kolektora), co upraszcza konfigurację i umożliwia łatwe dodawanie nowych backendów w przyszłości.
+4.  **Separacja Odpowiedzialności**: Projekt doskonale ilustruje zasadę separacji odpowiedzialności. OpenFGA zarządza logiką autoryzacji, aplikacja FastAPI logiką biznesową, a system OpenTelemetry zapewnia obserwowalność. Taki podział ułatwia rozwój, testowanie i utrzymanie każdego z komponentów.
+5.  **Moc Deklaratywnej Konfiguracji**: Zarówno model autoryzacji w OpenFGA (`openfga_model.json`), jak i konfiguracja infrastruktury (`docker-compose.yaml`) oraz potoków telemetrycznych (`otel-collector-config.yaml`) są zdefiniowane w sposób deklaratywny. Ułatwia to zrozumienie systemu, automatyzację wdrożeń i zarządzanie zmianami.
+
+## 12. Bibliografia
 -   [OpenFGA Documentation](https://openfga.dev/docs/)
 -   [OpenTelemetry Documentation](https://opentelemetry.io/docs/)
 -   [Python Opentelemetry Documentation](https://opentelemetry-python.readthedocs.io/)
